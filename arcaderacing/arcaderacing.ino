@@ -7,25 +7,26 @@ int rightBorderX = gb.display.width();
 int topBorderY = 0;
 int bottomBorderY = gb.display.height();
 
-int playerCarX = 10;
-int playerCarY = bottomBorderY-30;
+int playerCarX = 0;
+int playerCarY = bottomBorderY-20;
 
-int carWidth = 32;
-int carHeight = 32;
-
-int enemyCarX = 3;
+int enemyCarX = 5;
+int enemyCarXRandom = 5;
 int enemyCarY = topBorderY;
 int enemyCarSpeed = 10;
 int enemyCarNumbers = 10;
-int enemyCarLane = 1; // 1 pour lane 1 , etc
+int enemyCarLaneSpawn = 0; 
 
+int lifeRemaining = 5; 
+
+int hasGameStarted = 0;
 
 const uint16_t player_car[] = {
 
     // metadata
 
-    carWidth,     // frame width
-    carHeight,     // frame height
+    32,     // frame width
+    32,     // frame height
     1,      // frames
     0,      // frame loop
     0xf81f, // transparent color
@@ -72,8 +73,8 @@ const uint16_t enemy_car[] = {
 
     // metadata
 
-    carWidth,     // frame width
-    carHeight,     // frame height
+    32,     // frame width
+    32,     // frame height
     1,      // frames
     0,      // frame loop
     0xf81f, // transparent color
@@ -120,30 +121,80 @@ Image image_player_car(player_car);
 Image image_enemy_car(enemy_car);
 
 void setup() {
+   /*if(gb.buttons.pressed(BUTTON_B)){
+    gb.display.print("Appuyer sur B pour commencer");
+    hasGameStarted = 1;
+  }*/
   gb.begin();
+
 }
 
 void loop() {
   while(!gb.update());
   gb.display.clear();
 
+  enemyCarLaneSpawn = random(0,3); 
+
   // afficher l'Image
   enemyCarY++;
   gb.display.drawImage(playerCarX, playerCarY, image_player_car);
-  gb.display.drawImage(enemyCarX, enemyCarY, image_enemy_car);
+  gb.display.drawImage(enemyCarXRandom, enemyCarY, image_enemy_car);
 
 
 
 
 
   if(gb.buttons.pressed(BUTTON_LEFT)){
-    if(!playerCarX <= leftBorderX ){
-      playerCarX -= 20;
+    if(playerCarX - 15 > leftBorderX ){
+      playerCarX -= 25;
     }
+      //playerCarX -= 25;
   }
   if(gb.buttons.pressed(BUTTON_RIGHT)){
-    if(!playerCarX <= leftBorderX ){
-      playerCarX += 20;
+    if(playerCarX + 30 < rightBorderX ){
+      playerCarX += 25;
+    }
+      // playerCarX += 25;
+  }
+
+  if(enemyCarY >= bottomBorderY){
+    enemyCarY = 0;
+    enemyCarXRandom = enemyCarX + (25*enemyCarLaneSpawn); // Algo, qui fait spawn de facon random parmi les 3 voies les enemies
+  }
+  gb.display.setColor(RED);
+  gb.display.print("VIES RESTANTES : ");
+  gb.display.println(lifeRemaining);
+  gb.display.setColor(YELLOW);
+  gb.display.print("SCORE : ");
+    //gb.display.print(score);
+
+    //Collision
+  if(
+  /*playerCarX + 5 == enemyCarXRandom &&  enemyCarY + 20 > playerCarY || */ 
+  playerCarX + 5 == enemyCarXRandom && playerCarY - 20 == enemyCarY ){
+    for (int i = 0; i < 5; i++){
+      gb.display.setColor(BLACK);
+      gb.display.fillRect(playerCarX + 5, playerCarY, 25, 20);
+      delay(100);
+      gb.display.drawImage(playerCarX, playerCarY, image_player_car);
+      delay(100);
+      //enemyCarY +=2;
+    }
+    if(lifeRemaining > 0){
+      lifeRemaining --;
     }
   }
+
+  if(lifeRemaining == 0){
+    gb.display.clear();
+    gb.display.setColor(RED);
+    gb.display.println("GAME OVER");
+    gb.display.println("APPUIE SUR A");
+    gb.display.print("POUR CONTINUER");
+    if(gb.buttons.pressed(BUTTON_A)){
+      lifeRemaining = 5;
+    }
+  }
+
+  
 }
